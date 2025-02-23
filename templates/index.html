@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Raspberry Pi Kamera Akışı ve Servo Kontrolü</title>
+    <style>
+        .video-container {
+            width: 640px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+        }
+
+        .servo-control {
+            width: 640px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .servo-control div {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: inline-block;
+            width: 120px;
+        }
+    </style>
+    <script>
+        function setServo(servo)
+        {
+            let angleInput = document.getElementById("angle" + servo);
+            let angle = parseInt(angleInput.value);
+
+            fetch('/set_servo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ servo: servo, angle: angle })
+            })
+                .then(response => response.json())
+                .then(data =>
+                {
+                    if (data.status === "başarılı")
+                    {
+                        alert('Servo ' + servo + ' açısı ' + angle + '° olarak ayarlandı.');
+                    } else
+                    {
+                        alert('Hata: ' + data.error);
+                    }
+                })
+                .catch(error =>
+                {
+                    console.error('Hata:', error);
+                });
+        }
+    </script>
+</head>
+
+<body>
+    <div class="video-container">
+        <img src="{{ url_for('video_feed') }}" alt="Video Akışı">
+    </div>
+    <div class="servo-control">
+        <h2>Servo Motor Kontrolü</h2>
+        <div>
+            <label for="angle1">Servo 1 Açı:</label>
+            <input type="range" id="angle1" name="angle1" min="0" max="180" value="90"
+                oninput="output1.value = this.value">
+            <output id="output1">90</output>
+            <button onclick="setServo(1)">Ayarla</button>
+        </div>
+        <div>
+            <label for="angle2">Servo 2 Açı:</label>
+            <input type="range" id="angle2" name="angle2" min="0" max="180" value="90"
+                oninput="output2.value = this.value">
+            <output id="output2">90</output>
+            <button onclick="setServo(2)">Ayarla</button>
+        </div>
+    </div>
+</body>
+
+</html>
