@@ -1,27 +1,22 @@
 from flask import Flask, Response, render_template, request, jsonify
 import subprocess
 import time
-import lgpio  # rpi-lgpio kütüphanesi
+from gpiozero import AngularServo
+from time import sleep
 
 app = Flask(__name__)
 
-# Servo pinleri (BCM numaralandırması)
-SERVO1_PIN = 12
-SERVO2_PIN = 13
+# Create AngularServo objects
+servo1 = AngularServo(13, min_angle=0, max_angle=180, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000)
+servo2 = AngularServo(12, min_angle=0, max_angle=180, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000)
 
-# LGPIO bağlantısını açıyoruz (genelde /dev/gpiochip0)
-h = lgpio.gpiochip_open(0)
-
-def set_servo_angle(servo_pin, angle):
-    """
-    Belirtilen açıya göre servo motorun pulse genişliğini hesaplar ve lgpio üzerinden gönderir.
-    0° için ~500 µs, 180° için ~2500 µs pulse gönderilir.
-    """
-    # Lineer dönüşüm: 0° => 500 µs, 180° => 2500 µs
-    pulsewidth = int(500 + (angle / 180.0) * 2000)
-    # Doğru fonksiyon: gpioSetServoPulsewidth
-    lgpio.gpioSetServoPulsewidth(h, servo_pin, pulsewidth)
-    time.sleep(0.5)  # Servo hareketi için kısa bekleme
+def set_servo_angle(servo_num, angle):
+    """Set the angle of the specified servo"""
+    if servo_num == 1:
+        servo1.angle = angle
+    else:
+        servo2.angle = angle
+    sleep(0.5)  # Give servo time to move
 
 def gen_frames():
     """libcamera-vid kullanarak MJPEG formatında canlı video akışı sağlar."""
@@ -108,16 +103,16 @@ def set_servo():
     if not (0 <= angle <= 180):
         return jsonify({'error': 'Açı değeri 0 ile 180 arasında olmalıdır.'}), 400
 
-    if servo == 1:
-        set_servo_angle(SERVO1_PIN, angle)
-    else:
-        set_servo_angle(SERVO2_PIN, angle)
+    set_servo_angle(servo, angle)
     
     return jsonify({'servo': servo, 'angle': angle, 'status': 'başarılı'})
 
 if __name__ == '__main__':
     try:
-        app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
-    finally:
-        # Uygulama kapanırken LGPIO bağlantısını kapatıyoruz
-        lgpio.gpiochip_close(h)
+        # Run Flask app
+        app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+    except KeyboardInterrupt:
+        # Clean up
+        servo1.detach()
+        servo2.detach()
+        print("Program terminated")
