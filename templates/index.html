@@ -20,6 +20,7 @@
             margin: 20px auto;
             padding: 20px;
             border: 1px solid #ccc;
+            text-align: center;
         }
 
         .servo-control div {
@@ -68,6 +69,19 @@
         <img src="{{ url_for('video_feed') }}" alt="Video Akışı">
     </div>
 
+    <div class="servo-control">
+        <h3>Servo Motor Kontrolü</h3>
+        <div>
+            <label for="angle1">Servo 1 Açısı:</label>
+            <input type="number" id="angle1" min="0" max="180" value="90">
+            <button onclick="setServo(1)">Servo 1'i Ayarla</button>
+        </div>
+        <div>
+            <label for="angle2">Servo 2 Açısı:</label>
+            <input type="number" id="angle2" min="0" max="180" value="90">
+            <button onclick="setServo(2)">Servo 2'yi Ayarla</button>
+        </div>
+    </div>
 </body>
 
 </html>
