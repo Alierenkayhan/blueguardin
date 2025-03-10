@@ -33,6 +33,7 @@
         }
     </style>
     <script>
+        // Servo kontrol fonksiyonu
         function setServo(servo)
         {
             let angleInput = document.getElementById("angle" + servo);
@@ -61,6 +62,33 @@
                     console.error('Hata:', error);
                 });
         }
+
+        // Bus tespiti için uyarı kontrolü
+        let alertShown = false; // Uyarının gösterilip gösterilmediği bilgisi
+
+        setInterval(() =>
+        {
+            fetch('/detection_status')
+                .then(response => response.json())
+                .then(data =>
+                {
+                    // Eğer bus tespit edildiyse ve daha önce uyarı gösterilmemişse, alert göster.
+                    if (data.bus_detected && !alertShown)
+                    {
+                        alert("Bus tespit edildi!");
+                        alertShown = true;
+                    }
+                    // Bus tespiti kalmadığında alert durumunu sıfırla.
+                    if (!data.bus_detected && alertShown)
+                    {
+                        alertShown = false;
+                    }
+                })
+                .catch(error =>
+                {
+                    console.error("Tespit durumu sorgulanırken hata:", error);
+                });
+        }, 2000); // Her 2 saniyede bir kontrol edilir
     </script>
 </head>
 
