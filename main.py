@@ -10,6 +10,8 @@ from time import sleep
 
 app = Flask(__name__)
 
+hotspot_coords = None
+
 # YOLOv5 modelini yükle
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 model.conf = 0.5  # Güven seviyesi eşiği
@@ -146,6 +148,26 @@ def detection_status():
     """Bus tespit durumunu JSON formatında döner."""
     return jsonify({"bus_detected": buzzer_on})
 
+
+@app.route('/update_hotspot', methods=['POST'])
+def update_hotspot():
+    """Hotspot konum bilgisini günceller."""
+    global hotspot_coords
+    data = request.get_json()
+    if "latitude" not in data or "longitude" not in data:
+        return jsonify({"error": "Eksik konum verisi"}), 400
+    hotspot_coords = {
+        "latitude": data["latitude"],
+        "longitude": data["longitude"]
+    }
+    return jsonify({"status": "başarılı", "hotspot_coords": hotspot_coords})
+
+@app.route('/hotspot_info')
+def hotspot_info():
+    """Güncel hotspot konumunu döner."""
+    if hotspot_coords is None:
+        return jsonify({"error": "Hotspot konumu henüz güncellenmedi"}), 400
+    return jsonify(hotspot_coords)
 
 if __name__ == '__main__':
     try:
