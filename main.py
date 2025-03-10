@@ -141,6 +141,12 @@ def set_servo():
     set_servo_angle(servo, angle)
     return jsonify({'servo': servo, 'angle': angle, 'status': 'başarılı'})
 
+@app.route('/detection_status')
+def detection_status():
+    """Bus tespit durumunu JSON formatında döner."""
+    return jsonify({"bus_detected": buzzer_on})
+
+
 if __name__ == '__main__':
     try:
         app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
