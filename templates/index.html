@@ -73,13 +73,13 @@
                 .then(data =>
                 {
                     // Eğer bus tespit edildiyse ve daha önce uyarı gösterilmemişse, alert göster.
-                    if (data.bus_detected && !alertShown)
+                    if (data.hayalet_detected && !alertShown)
                     {
-                        alert("Bus tespit edildi!");
+                        alert("Hayalet ağ tespit edildi!");
                         alertShown = true;
                     }
                     // Bus tespiti kalmadığında alert durumunu sıfırla.
-                    if (!data.bus_detected && alertShown)
+                    if (!data.hayalet_detected && alertShown)
                     {
                         alertShown = false;
                     }
