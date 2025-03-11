@@ -13,7 +13,8 @@ app = Flask(__name__)
 hotspot_coords = None
 
 # YOLOv5 modelini yükle
-model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
+model = torch.hub.load('ultralytics/yolov5', 'custom', path='yolov5/best.pt')
+
 model.conf = 0.5  # Güven seviyesi eşiği
 
 # Servo motorları tanımla
@@ -43,7 +44,7 @@ def detect_objects(frame):
     results = model(frame)  # Modeli çalıştır
     detections = results.xyxy[0].cpu().numpy()  # Tespitleri al
 
-    bus_detected = False  # Bus nesnesi tespiti
+    hayalet_detected = False  # hayalet nesnesi tespiti
 
     for det in detections:
         x1, y1, x2, y2, conf, cls = det
@@ -53,16 +54,15 @@ def detect_objects(frame):
             cv2.putText(frame, f"{label} {conf:.2f}", (int(x1), int(y1)-10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             # "person" tespitinde servo 1'i hareket ettir
-            if label == "person":
-                set_servo_angle(1, 90)
-            # "bus" tespitinde buzzer'ı etkinleştir
-            if label == "bus":
-                bus_detected = True
+ 
+            # "hayalet" tespitinde buzzer'ı etkinleştir
+            if label == "hayalet-agi":
+                hayalet_detected = True
 
-    if bus_detected and not buzzer_on:
+    if hayalet_detected and not buzzer_on:
         buzzer.on()
         buzzer_on = True
-    elif not bus_detected and buzzer_on:
+    elif not hayalet_detected and buzzer_on:
         buzzer.off()
         buzzer_on = False
 
@@ -145,8 +145,8 @@ def set_servo():
 
 @app.route('/detection_status')
 def detection_status():
-    """Bus tespit durumunu JSON formatında döner."""
-    return jsonify({"bus_detected": buzzer_on})
+    """hayalet tespit durumunu JSON formatında döner."""
+    return jsonify({"hayalet_detected": buzzer_on})
 
 
 @app.route('/update_hotspot', methods=['POST'])
