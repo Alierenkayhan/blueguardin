@@ -3,7 +3,6 @@
 
 <head>
     <title>PAD - Kayıt Ol</title>
-    <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <style>
         body {
@@ -53,6 +52,26 @@
             box-sizing: border-box;
         }
 
+        .password-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .password-container input {
+            padding-right: 40px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            top: 35%;
+            right: 10px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+            user-select: none;
+        }
+
         form button {
             width: 100%;
             padding: 10px;
@@ -92,14 +111,26 @@
         <form action="{{ url_for('register') }}" method="post">
             <label for="username">Kullanıcı Adı:</label>
             <input type="text" name="username" id="username" required>
+
             <label for="password">Şifre:</label>
-            <input type="password" name="password" id="password" required>
+            <div class="password-container">
+                <input type="password" name="password" id="password" required>
+                <span class="toggle-password" id="togglePassword">👁️</span>
+            </div>
+
+            <label for="confirm_password">Şifre (Tekrar):</label>
+            <div class="password-container">
+                <input type="password" name="confirm_password" id="confirm_password" required>
+                <span class="toggle-password" id="togglePasswordConfirm">👁️</span>
+            </div>
+
             <button type="submit">Kayıt Ol</button>
         </form>
         <div class="link">
             <p>Zaten hesabınız var mı? <a href="{{ url_for('login') }}">Giriş Yapın</a></p>
         </div>
     </div>
+
     {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
     <script>
@@ -110,6 +141,38 @@
     {% endif %}
     {% endwith %}
 
+    <script>
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const togglePasswordConfirm = document.getElementById('togglePasswordConfirm');
+        const passwordConfirmInput = document.getElementById('confirm_password');
+
+        togglePassword.addEventListener('click', function ()
+        {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+
+        togglePasswordConfirm.addEventListener('click', function ()
+        {
+            const type = passwordConfirmInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordConfirmInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+
+        document.querySelector('form').addEventListener('submit', function (e)
+        {
+            const pwd = passwordInput.value.trim();
+            const pwdConfirm = passwordConfirmInput.value.trim();
+
+            if (pwd !== pwdConfirm)
+            {
+                e.preventDefault();
+                alert("Şifreler eşleşmiyor!");
+            }
+        });
+    </script>
 </body>
 
 </html>
