@@ -105,10 +105,9 @@
 
 <body>
     <div class="form-container">
-        <!-- Üstte resim -->
         <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
         <h2>Kayıt Ol</h2>
-        <form action="{{ url_for('register') }}" method="post">
+        <form id="registerForm">
             <label for="username">Kullanıcı Adı:</label>
             <input type="text" name="username" id="username" required>
 
@@ -131,17 +130,8 @@
         </div>
     </div>
 
-    {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
     <script>
-        {% for category, message in messages %}
-        alert("{{ message }}");
-        {% endfor %}
-    </script>
-    {% endif %}
-    {% endwith %}
-
-    <script>
+        // Şifre göster/gizle işlemleri
         const togglePassword = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');
         const togglePasswordConfirm = document.getElementById('togglePasswordConfirm');
@@ -161,15 +151,37 @@
             this.textContent = type === 'password' ? '👁️' : '🙈';
         });
 
-        document.querySelector('form').addEventListener('submit', function (e)
+        // Formu JSON olarak sunucuya gönder
+        document.getElementById("registerForm").addEventListener("submit", async function (e)
         {
-            const pwd = passwordInput.value.trim();
-            const pwdConfirm = passwordConfirmInput.value.trim();
+            e.preventDefault();
 
-            if (pwd !== pwdConfirm)
+            const username = document.getElementById("username").value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = passwordConfirmInput.value;
+
+            if (password !== confirmPassword)
             {
-                e.preventDefault();
                 alert("Şifreler eşleşmiyor!");
+                return;
+            }
+
+            const response = await fetch("{{ url_for('register') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+            if (response.ok)
+            {
+                alert(data.message);
+                window.location.href = "{{ url_for('login') }}";
+            } else
+            {
+                alert(data.error);
             }
         });
     </script>
