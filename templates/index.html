@@ -2,48 +2,134 @@
 <html>
 
 <head>
-    <title>Raspberry Pi Kamera Akışı ve Servo Kontrolü</title>
+    <title>PAD - Blueguardin</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <style>
-        .video-container {
-            width: 640px;
-            margin: 0 auto;
-            padding: 20px;
+        /* Genel sayfa ayarları */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #eef2f5;
         }
 
-        img {
+        /* Üst header bölümü */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 30px;
+            background: #003366;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header img {
+            height: 50px;
+        }
+
+        .header h3 {
+            margin: 0;
+            flex-grow: 1;
+            text-align: center;
+            font-size: 22px;
+        }
+
+        /* Çıkış butonu */
+        .logout-btn {
+            background-color: #dc3545;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+            transform: scale(1.05);
+        }
+
+        /* Video konteyneri */
+        .video-container {
+            width: 700px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .video-container img {
             width: 100%;
             height: auto;
+            border-radius: 8px;
         }
 
+        /* Servo kontrol kartı */
         .servo-control {
-            width: 640px;
-            margin: 20px auto;
+            width: 700px;
+            margin: 30px auto;
+            background: #fff;
             padding: 20px;
-            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             text-align: center;
+        }
+
+        .servo-control h3 {
+            margin-bottom: 20px;
+            color: #003366;
         }
 
         .servo-control div {
             margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        label {
-            display: inline-block;
-            width: 120px;
+        .servo-control label {
+            width: 150px;
+            font-weight: bold;
+        }
+
+        .servo-control input[type="number"] {
+            width: 70px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        .servo-control button {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .servo-control button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
         }
     </style>
     <script>
-        // Servo kontrol fonksiyonu
         function setServo(servo)
         {
             let angleInput = document.getElementById("angle" + servo);
             let angle = parseInt(angleInput.value);
-
             fetch('/set_servo', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ servo: servo, angle: angle })
             })
                 .then(response => response.json())
@@ -63,22 +149,18 @@
                 });
         }
 
-        // Bus tespiti için uyarı kontrolü
-        let alertShown = false; // Uyarının gösterilip gösterilmediği bilgisi
-
+        let alertShown = false;
         setInterval(() =>
         {
             fetch('/detection_status')
                 .then(response => response.json())
                 .then(data =>
                 {
-                    // Eğer bus tespit edildiyse ve daha önce uyarı gösterilmemişse, alert göster.
                     if (data.hayalet_detected && !alertShown)
                     {
                         alert("Hayalet ağ tespit edildi!");
                         alertShown = true;
                     }
-                    // Bus tespiti kalmadığında alert durumunu sıfırla.
                     if (!data.hayalet_detected && alertShown)
                     {
                         alertShown = false;
@@ -88,15 +170,24 @@
                 {
                     console.error("Tespit durumu sorgulanırken hata:", error);
                 });
-        }, 2000); // Her 2 saniyede bir kontrol edilir
+        }, 2000);
     </script>
 </head>
 
 <body>
+    <!-- Üst header -->
+    <div class="header">
+        <img src="{{ url_for('static', filename='blueguardin.png') }}" alt="Logo">
+        <h3>PAD - Blueguardin</h3>
+        <a href="{{ url_for('logout') }}" class="logout-btn">Çıkış Yap</a>
+    </div>
+
+    <!-- Video Akışı -->
     <div class="video-container">
         <img src="{{ url_for('video_feed') }}" alt="Video Akışı">
     </div>
 
+    <!-- Servo Kontrol Paneli -->
     <div class="servo-control">
         <h3>Servo Motor Kontrolü</h3>
         <div>
