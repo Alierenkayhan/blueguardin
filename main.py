@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template, request, jsonify
+from flask import Flask, Response, render_template, request, jsonify, g, session, redirect, url_for, flash
 import subprocess
 import time
 import threading
@@ -7,10 +7,14 @@ import cv2
 import numpy as np
 from gpiozero import AngularServo, Buzzer
 from time import sleep
+import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-
 hotspot_coords = None
+
+app.secret_key = 'your_secret_key'  
+DATABASE = 'users.db'
 
 # YOLOv5 modelini yükle
 model = torch.hub.load('ultralytics/yolov5', 'custom', path='yolov5/best.pt')
@@ -118,6 +122,34 @@ t = threading.Thread(target=capture_frames)
 t.daemon = True
 t.start()
 
+def get_db():
+    """Her istek için SQLite veritabanı bağlantısını döner."""
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
+
+@app.teardown_appcontext
+def close_connection(exception):
+    """İstek sonunda veritabanı bağlantısını kapatır."""
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
+def init_db():
+    """Veritabanında 'users' tablosunu oluşturur."""
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                password TEXT NOT NULL
+            )
+        ''')
+        db.commit()
+
 @app.route('/video_feed')
 def video_feed():
     """Video akışını sağlayan endpoint."""
@@ -126,6 +158,8 @@ def video_feed():
 @app.route('/')
 def index():
     """Ana sayfa."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
     return render_template('index.html')
 
 @app.route('/set_servo', methods=['POST'])
@@ -169,8 +203,48 @@ def hotspot_info():
         return jsonify({"error": "Hotspot konumu henüz güncellenmedi"}), 400
     return jsonify(hotspot_coords)
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        hashed_password = generate_password_hash(password)
+        db = get_db()
+        cursor = db.cursor()
+        try:
+            cursor.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, hashed_password))
+            db.commit()
+        except sqlite3.IntegrityError:
+            flash("Bu kullanıcı adı zaten mevcut.", "error")
+            return redirect(url_for('register'))
+        return redirect(url_for('login'))
+    return render_template('register.html')  # register.html dosyasını oluşturun
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute('SELECT id, password FROM users WHERE username = ?', (username,))
+        user = cursor.fetchone()
+        if user and check_password_hash(user[1], password):
+            session['user_id'] = user[0]
+            return redirect(url_for('index'))
+        else:
+            flash("Geçersiz kullanıcı adı veya şifre.", "error")
+            return redirect(url_for('login'))
+    return render_template('login.html')  # login.html dosyasını oluşturun
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    return redirect(url_for('login'))
+
 if __name__ == '__main__':
     try:
+        init_db()
         app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
     except KeyboardInterrupt:
         servo1.detach()
