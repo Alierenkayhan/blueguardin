@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>PAD - Giriş Yap</title>
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .form-container {
+            background: #fff;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .form-container img {
+            width: 100px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            text-align: left;
+        }
+
+        form input[type="text"],
+        form input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        form button {
+            width: 100%;
+            padding: 10px;
+            background: #007BFF;
+            border: none;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        form button:hover {
+            background: #0056b3;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .link a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-container">
+        <!-- Üstte resim -->
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+        <h2>Giriş Yap</h2>
+        <form action="{{ url_for('login') }}" method="post">
+            <label for="username">Kullanıcı Adı:</label>
+            <input type="text" name="username" id="username" required>
+            <label for="password">Şifre:</label>
+            <input type="password" name="password" id="password" required>
+            <button type="submit">Giriş Yap</button>
+        </form>
+        <div class="link">
+            <p>Hesabınız yok mu? <a href="{{ url_for('register') }}">Kayıt Olun</a></p>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+    <script>
+        {% for category, message in messages %}
+        alert("{{ message }}");
+        {% endfor %}
+    </script>
+    {% endif %}
+    {% endwith %}
+
+</body>
+
+</html>
