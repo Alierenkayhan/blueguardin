@@ -3,7 +3,6 @@
 
 <head>
     <title>PAD - Giriş Yap</title>
-    <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <style>
         body {
@@ -53,19 +52,15 @@
             box-sizing: border-box;
         }
 
-        /* Şifre alanı + göz ikonu kapsayıcısı */
         .password-container {
             position: relative;
-            /* İkona absolute konum vermek için relative container */
             margin-bottom: 15px;
         }
 
-        /* Şifre inputunun sağında ikona yer açmak için sağ padding ekliyoruz */
         .password-container input {
             padding-right: 40px;
         }
 
-        /* Göz ikonunun konumu ve görünümü */
         .toggle-password {
             position: absolute;
             top: 35%;
@@ -77,7 +72,6 @@
             user-select: none;
         }
 
-        /* Buton stili */
         form button {
             width: 100%;
             padding: 10px;
@@ -111,7 +105,6 @@
 
 <body>
     <div class="form-container">
-        <!-- Üstte resim -->
         <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
         <h2>Giriş Yap</h2>
         <form action="{{ url_for('login') }}" method="post">
@@ -119,7 +112,6 @@
             <input type="text" name="username" id="username" required>
 
             <label for="password">Şifre:</label>
-            <!-- Şifre inputu + göz ikonu aynı kapsayıcı içinde -->
             <div class="password-container">
                 <input type="password" name="password" id="password" required>
                 <span class="toggle-password" id="togglePassword">👁️</span>
@@ -148,12 +140,10 @@
 
         togglePassword.addEventListener('click', function ()
         {
-            // type "password" ise "text" yap, değilse tersi
             const currentType = passwordInput.getAttribute('type');
             const newType = currentType === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', newType);
 
-            // İkonu da duruma göre değiştirebilirsiniz
             this.textContent = newType === 'password' ? '👁️' : '🙈';
         });
     </script>
