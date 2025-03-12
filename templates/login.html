@@ -107,7 +107,7 @@
     <div class="form-container">
         <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
         <h2>Giriş Yap</h2>
-        <form action="{{ url_for('login') }}" method="post">
+        <form id="loginForm">
             <label for="username">Kullanıcı Adı:</label>
             <input type="text" name="username" id="username" required>
 
@@ -124,17 +124,8 @@
         </div>
     </div>
 
-    {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
     <script>
-        {% for category, message in messages %}
-        alert("{{ message }}");
-        {% endfor %}
-    </script>
-    {% endif %}
-    {% endwith %}
-
-    <script>
+        // Şifre göster/gizle
         const togglePassword = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');
 
@@ -143,8 +134,33 @@
             const currentType = passwordInput.getAttribute('type');
             const newType = currentType === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', newType);
-
             this.textContent = newType === 'password' ? '👁️' : '🙈';
+        });
+
+        // Formu JSON olarak sunucuya gönder
+        document.getElementById("loginForm").addEventListener("submit", async function (e)
+        {
+            e.preventDefault();
+
+            const username = document.getElementById("username").value.trim();
+            const password = passwordInput.value;
+            const response = await fetch("{{ url_for('login') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+            if (response.ok)
+            {
+                alert(data.message);
+                window.location.href = "{{ url_for('index') }}";
+            } else
+            {
+                alert(data.error);
+            }
         });
     </script>
 </body>
