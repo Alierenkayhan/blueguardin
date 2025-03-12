@@ -206,8 +206,13 @@ def hotspot_info():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        # JSON ya da form-data olarak gelen veriyi alıyoruz.
+        data = request.get_json() or request.form
+        username = data.get('username')
+        password = data.get('password')
+        if not username or not password:
+            return jsonify({'error': 'Eksik kullanıcı adı veya şifre.'}), 400
+
         hashed_password = generate_password_hash(password)
         db = get_db()
         cursor = db.cursor()
@@ -215,27 +220,30 @@ def register():
             cursor.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, hashed_password))
             db.commit()
         except sqlite3.IntegrityError:
-            flash("Bu kullanıcı adı zaten mevcut.", "error")
-            return redirect(url_for('register'))
-        return redirect(url_for('login'))
-    return render_template('register.html') 
+            return jsonify({'error': 'Bu kullanıcı adı zaten mevcut.'}), 400
+        return jsonify({'message': 'Kayıt başarılı. Giriş yapabilirsiniz.'})
+    return render_template('register.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        data = request.get_json() or request.form
+        username = data.get('username')
+        password = data.get('password')
+        if not username or not password:
+            return jsonify({'error': 'Eksik kullanıcı adı veya şifre.'}), 400
+
         db = get_db()
         cursor = db.cursor()
         cursor.execute('SELECT id, password FROM users WHERE username = ?', (username,))
         user = cursor.fetchone()
         if user and check_password_hash(user[1], password):
             session['user_id'] = user[0]
-            return redirect(url_for('index'))
+            return jsonify({'message': 'Giriş başarılı.'})
         else:
-            flash("Geçersiz kullanıcı adı veya şifre.", "error")
-            return redirect(url_for('login'))
-    return render_template('login.html') 
+            return jsonify({'error': 'Geçersiz kullanıcı adı veya şifre.'}), 401
+    return render_template('login.html')
 
 @app.route('/logout')
 def logout():
